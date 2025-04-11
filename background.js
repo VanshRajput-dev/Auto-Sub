@@ -1,30 +1,48 @@
 let audioStream = null;
+let mediaRecorder = null;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "start_capture") {
-    console.log("Starting audio capture...");
+    console.log("✅ Start capture message received!");
 
     chrome.tabCapture.capture({ audio: true, video: false }, (stream) => {
       if (!stream) {
-        console.error("Failed to capture audio:", chrome.runtime.lastError);
+        console.error("❌ Failed to capture audio:", chrome.runtime.lastError);
         return;
       }
 
       audioStream = stream;
-      console.log("Audio stream captured!");
+      console.log("🎙️ Audio stream captured!");
 
-      // You could process this stream here or send it to a recorder function
       startStreamingAudioToBackend(audioStream);
     });
+  }
+
+  if (request.action === "stop_capture") {
+    console.log("🛑 Stop capture message received!");
+
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+      console.log("📴 MediaRecorder stopped.");
+    }
+
+    if (audioStream) {
+      const tracks = audioStream.getTracks();
+      tracks.forEach(track => track.stop());
+      console.log("🔇 Audio stream tracks stopped.");
+    }
+
+    audioStream = null;
+    mediaRecorder = null;
   }
 });
 
 function startStreamingAudioToBackend(stream) {
-  const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+  mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
 
   mediaRecorder.ondataavailable = async (event) => {
     if (event.data.size > 0) {
-      console.log("Sending audio chunk to backend...");
+      console.log("📤 Sending audio chunk to backend...");
 
       const blob = event.data;
       const formData = new FormData();
@@ -37,18 +55,26 @@ function startStreamingAudioToBackend(stream) {
         });
 
         const data = await response.json();
-        const transcript = data.transcript;
-        console.log("Transcript:", transcript);
 
-        // Send this to content script to show on screen
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            action: "show_transcript",
-            text: transcript,
+        if (data.transcription) {
+          const transcript = data.transcription;
+          console.log("📄 Transcript:", transcript);
+
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs && tabs.length > 0) {
+              chrome.tabs.sendMessage(tabs[0].id, {
+                action: "show_transcript",
+                text: transcript,
+              });
+            } else {
+              console.warn("⚠️ No active tab found to send transcript.");
+            }
           });
-        });
+        } else {
+          console.error("❌ No transcription returned from backend:", data);
+        }
       } catch (err) {
-        console.error("Error sending audio to backend:", err);
+        console.error("❌ Error sending audio to backend:", err);
       }
     }
   };
