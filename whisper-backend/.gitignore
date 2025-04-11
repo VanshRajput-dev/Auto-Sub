@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.env.bak/
+.venv/
+
+# VS Code settings (optional)
+.vscode/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# PyInstaller
+*.spec
+
+# Log and runtime files
+*.log
+*.tmp
+*.bak
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Audio/video cache or test files
+*.wav
+*.mp3
+*.mp4
+*.mkv
+*.avi
+*.webm
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# pip-wheel-metadata
+pip-wheel-metadata/
