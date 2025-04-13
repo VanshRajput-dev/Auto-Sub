@@ -3,33 +3,33 @@ let mediaRecorder = null;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "start_capture") {
-    console.log("✅ Start capture message received!");
+    console.log("Start capture message received!");
 
     chrome.tabCapture.capture({ audio: true, video: false }, (stream) => {
       if (!stream) {
-        console.error("❌ Failed to capture audio:", chrome.runtime.lastError);
+        console.error("Failed to capture audio:", chrome.runtime.lastError);
         return;
       }
 
       audioStream = stream;
-      console.log("🎙️ Audio stream captured!");
+      console.log("Audio stream captured!");
 
       startStreamingAudioToBackend(audioStream);
     });
   }
 
   if (request.action === "stop_capture") {
-    console.log("🛑 Stop capture message received!");
+    console.log("Stop capture message received!");
 
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
       mediaRecorder.stop();
-      console.log("📴 MediaRecorder stopped.");
+      console.log("MediaRecorder stopped.");
     }
 
     if (audioStream) {
       const tracks = audioStream.getTracks();
       tracks.forEach(track => track.stop());
-      console.log("🔇 Audio stream tracks stopped.");
+      console.log("Audio stream tracks stopped.");
     }
 
     audioStream = null;
@@ -42,7 +42,7 @@ function startStreamingAudioToBackend(stream) {
 
   mediaRecorder.ondataavailable = async (event) => {
     if (event.data.size > 0) {
-      console.log("📤 Sending audio chunk to backend...");
+      console.log("Sending audio chunk to backend...");
 
       const blob = event.data;
       const formData = new FormData();
@@ -67,17 +67,17 @@ function startStreamingAudioToBackend(stream) {
                 text: transcript,
               });
             } else {
-              console.warn("⚠️ No active tab found to send transcript.");
+              console.warn("No active tab found to send transcript.");
             }
           });
         } else {
-          console.error("❌ No transcription returned from backend:", data);
+          console.error("No transcription returned from backend:", data);
         }
       } catch (err) {
-        console.error("❌ Error sending audio to backend:", err);
+        console.error("Error sending audio to backend:", err);
       }
     }
   };
 
-  mediaRecorder.start(5000); // capture in 5-second chunks
+  mediaRecorder.start(1000);
 }

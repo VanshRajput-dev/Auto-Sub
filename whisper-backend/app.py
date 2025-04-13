@@ -9,20 +9,20 @@ model = whisper.load_model("base")
 
 @app.route('/')
 def home():
-    return jsonify({"message": "✅ Whisper backend is running!"})
+    return jsonify({"message": "Whisper backend is running!"})
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
     if 'audio' not in request.files:
-        print("❌ No audio part in request")
+        print("No audio part in request")
         return jsonify({'error': 'No audio file provided'}), 400
 
     # Save the incoming .webm file
     webm_file = request.files['audio']
     with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as tmp_webm:
         webm_path = tmp_webm.name
-        webm_file.save(webm_path)
-        print(f"📥 Saved incoming audio to: {webm_path}")
+        webm_file.save(w   ebm_path)
+        print(f"Saved incoming audio to: {webm_path}")
 
     # Convert .webm to .wav using FFmpeg
     wav_path = webm_path.replace(".webm", ".wav")
@@ -30,20 +30,20 @@ def transcribe():
         subprocess.run([
             "ffmpeg", "-y", "-i", webm_path, wav_path
         ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"🔄 Converted to WAV: {wav_path}")
+        print(f"Converted to WAV: {wav_path}")
     except subprocess.CalledProcessError as e:
-        print("❌ FFmpeg conversion failed:", e)
+        print("FFmpeg conversion failed:", e)
         os.remove(webm_path)
         return jsonify({'error': 'FFmpeg conversion failed'}), 500
 
     # Transcribe with Whisper
     try:
-        print("🧠 Running transcription...")
+        print("Running transcription...")
         result = model.transcribe(wav_path)
         transcription = result.get('text', '').strip()
-        print("✅ Transcription successful:", transcription)
+        print("Transcription successful:", transcription)
     except Exception as e:
-        print("❌ Whisper transcription failed:", e)
+        print("Whisper transcription failed:", e)
         return jsonify({'error': f'Transcription failed: {str(e)}'}), 500
     finally:
         # Clean up temporary files
