@@ -25,7 +25,7 @@ def transcribe():
     print("Content-Length:", request.content_length)
 
     if file.filename == '':
-        print("Empty filename in request")
+        print("Empty filencdame in request")
         return jsonify({'error': 'Empty filename'}), 400
 
     # Skip WebM and go directly to WAV to avoid WebM parsing issues
